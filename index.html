@@ -215,6 +215,18 @@
             color: #27ae60;
         }
         
+        /* Container para impressão do gabarito */
+        .print-solution {
+            display: none;
+        }
+        
+        /* SVG para impressão */
+        .print-svg {
+            display: none;
+            width: 100%;
+            height: auto;
+        }
+        
         /* Melhorias para mobile */
         @media (max-width: 768px) {
             body {
@@ -298,14 +310,20 @@
         /* Estilos de impressão - MODIFICADO */
         @media print {
             body {
-                background: white;
+                background: white !important;
                 padding: 0;
+                margin: 0;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .container {
-                box-shadow: none;
-                border-radius: 0;
-                padding: 0;
-                max-width: 100%;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                margin-bottom: 0 !important;
+                background: white !important;
             }
             header {
                 margin-bottom: 10px;
@@ -313,7 +331,7 @@
             }
             h1 {
                 font-size: 1.5rem;
-                color: black;
+                color: #3a1c71 !important;
                 padding-bottom: 5px;
                 margin-bottom: 5px;
             }
@@ -322,7 +340,7 @@
                 display: none !important;
             }
             h2 {
-                color: black;
+                color: #3a1c71 !important;
                 text-align: center;
                 font-size: 1.3rem;
                 margin-bottom: 8px;
@@ -352,7 +370,7 @@
             }
             .simple-word-item {
                 font-size: 0.8rem; /* Reduzido para economizar espaço */
-                color: black;
+                color: #3a1c71 !important;
                 background-color: transparent !important;
                 text-align: left; /* Alinhado à esquerda */
                 padding: 2px 4px; /* Reduzido para economizar espaço */
@@ -368,6 +386,30 @@
                 font-size: 8pt;
                 color: #666;
                 width: 100%;
+                font-style: italic;
+            }
+            
+            /* MOSTRAR o gabarito SVG na impressão */
+            .print-svg {
+                display: block !important;
+                page-break-before: always;
+                width: 100% !important;
+                height: auto !important;
+                max-width: 100% !important;
+            }
+            
+            .print-solution {
+                display: none !important;
+            }
+            
+            /* Rodapé para impressão */
+            body::after {
+                content: "Atividade lúdica desenvolvida exclusivamente para fins didáticos.";
+                display: block;
+                text-align: center;
+                margin-top: 20px;
+                font-size: 10pt;
+                color: black;
                 font-style: italic;
             }
         }
@@ -390,6 +432,17 @@
             margin-top: 5px;
             font-size: 0.9rem;
         }
+        
+        /* Observação do professor */
+        .teacher-note {
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f5f7ff;
+            border-radius: 8px;
+            font-style: italic;
+            color: #3a1c71;
+        }
     </style>
 </head>
 <body>
@@ -397,6 +450,10 @@
         <header>
             <h1 id="puzzleTitle">Caça-Palavras Tradicional</h1>
         </header>
+
+        <div class="teacher-note">
+            Atividade lúdica desenvolvida exclusivamente para fins didáticos.
+        </div>
 
         <div class="config-panel">
             <div class="config-group">
@@ -423,6 +480,7 @@
             <button onclick="generateGrid()">Gerar Caça-Palavras</button>
             <button onclick="showSolutions()">Mostrar Soluções</button>
             <button onclick="window.print()">Imprimir</button>
+            <button onclick="printWithSolution()">Imprimir com Gabarito</button>
         </div>
 
         <div class="status" id="status">Clique em "Gerar Caça-Palavras" para começar</div>
@@ -460,6 +518,20 @@
             </div>
         </div>
         
+        <!-- Container para impressão do gabarito -->
+        <div id="printSolution" class="print-solution">
+            <h1>Gabarito</h1>
+            <div id="printSolutionGrid" class="grid"></div>
+            <div class="teacher-note" style="margin-top: 20px;">
+                Atividade lúdica desenvolvida exclusivamente para fins didáticos.
+            </div>
+        </div>
+        
+        <!-- SVG para impressão do gabarito colorido -->
+        <svg id="printSvg" class="print-svg" viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg">
+            <!-- O conteúdo do SVG será gerado dinamicamente -->
+        </svg>
+        
         <!-- Rodapé para impressão -->
         <div class="print-footer">
             Atividade lúdica desenvolvida exclusivamente para fins didáticos.
@@ -468,6 +540,7 @@
 
     <footer>
         <p>Caça-Palavras Tradicional</p>
+        <p>Atividade lúdica desenvolvida exclusivamente para fins didáticos.</p>
     </footer>
 
     <script>
@@ -475,7 +548,7 @@
         const MAX_WORDS = 30;
         const MAX_WORD_LENGTH = 12; // Alterado de 8 para 12
         
-        // Variáveis globales
+        // Variáveis globais
         let rows = 21;
         let cols = 17;
         let words = [];
@@ -485,16 +558,8 @@
         
         // Cores para o estilo PDF (diferentes tons de marca-texto)
         const highlightColors = [
-            'rgba(255, 255, 0, 0.6)',      // Amarelo
-            'rgba(0, 255, 0, 0.4)',        // Verde
-            'rgba(255, 192, 203, 0.6)',    // Rosa
-            'rgba(173, 216, 230, 0.6)',    // Azul claro
-            'rgba(255, 165, 0, 0.5)',      // Laranja
-            'rgba(176, 224, 230, 0.6)',    // Azul pálido
-            'rgba(144, 238, 144, 0.5)',    // Verde claro
-            'rgba(221, 160, 221, 0.5)',    // Ameixa
-            'rgba(152, 251, 152, 0.5)',    // Verde pálido
-            'rgba(175, 238, 238, 0.5)'     // Turquesa
+            '#FFFF00', '#00FF00', '#FF69B4', '#87CEEB', '#FFA500',
+            '#B0E0E6', '#90EE90', '#DDA0DD', '#98FB98', '#AFEEEE'
         ];
         
         // Inicializar a contagem de palavras
@@ -537,6 +602,115 @@
             
             rowsInput.value = rowsValue;
             colsInput.value = colsValue;
+        }
+        
+        // Função para imprimir com gabarito
+        function printWithSolution() {
+            generatePrintSVG();
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+        
+        // Gerar o gabarito como SVG (SEMPRE COLORIDO)
+        function generatePrintSVG() {
+            const svg = document.getElementById('printSvg');
+            svg.innerHTML = '';
+            
+            // Configurações do SVG
+            const cellSize = 25;
+            const startX = 50;
+            const startY = 100;
+            const gridWidth = cols * cellSize;
+            const gridHeight = rows * cellSize;
+            
+            // Título
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            title.setAttribute('x', '300');
+            title.setAttribute('y', '40');
+            title.setAttribute('text-anchor', 'middle');
+            title.setAttribute('font-family', 'Arial, sans-serif');
+            title.setAttribute('font-size', '24');
+            title.setAttribute('font-weight', 'bold');
+            title.setAttribute('fill', '#3a1c71');
+            title.textContent = 'Gabarito - ' + (document.getElementById('puzzleTitle').textContent || 'Caça-Palavras Tradicional');
+            svg.appendChild(title);
+            
+            // Fundo do grid
+            const gridBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            gridBg.setAttribute('x', startX);
+            gridBg.setAttribute('y', startY);
+            gridBg.setAttribute('width', gridWidth);
+            gridBg.setAttribute('height', gridHeight);
+            gridBg.setAttribute('fill', 'white');
+            gridBg.setAttribute('stroke', '#8f94fb');
+            gridBg.setAttribute('stroke-width', '1');
+            svg.appendChild(gridBg);
+            
+            // Primeiro desenhar os retângulos coloridos
+            let colorIdx = 0;
+            for (const word of Object.keys(placements)) {
+                const color = highlightColors[colorIdx % highlightColors.length];
+                
+                for (const [r, c] of placements[word]) {
+                    const x = startX + c * cellSize;
+                    const y = startY + r * cellSize;
+                    
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', x);
+                    rect.setAttribute('y', y);
+                    rect.setAttribute('width', cellSize);
+                    rect.setAttribute('height', cellSize);
+                    rect.setAttribute('fill', color);
+                    rect.setAttribute('stroke', '#8f94fb');
+                    rect.setAttribute('stroke-width', '0.5');
+                    svg.appendChild(rect);
+                }
+                
+                colorIdx++;
+            }
+            
+            // Depois desenhar as letras
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const x = startX + j * cellSize + cellSize / 2;
+                    const y = startY + i * cellSize + cellSize / 2 + 5;
+                    const solutionGrid = document.getElementById('solutionGrid');
+                    let letter = '';
+                    if (solutionGrid && solutionGrid.children[i * cols + j]) {
+                        letter = solutionGrid.children[i * cols + j].textContent;
+                    } else {
+                        const grid = document.getElementById('grid');
+                        letter = grid.children[i * cols + j].textContent;
+                    }
+                    
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', x);
+                    text.setAttribute('y', y);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('font-family', 'Arial, sans-serif');
+                    text.setAttribute('font-size', '14');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('fill', 'black');
+                    text.textContent = letter;
+                    svg.appendChild(text);
+                }
+            }
+            
+            // Rodapé
+            const footer = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            footer.setAttribute('x', '300');
+            footer.setAttribute('y', startY + gridHeight + 40);
+            footer.setAttribute('text-anchor', 'middle');
+            footer.setAttribute('font-family', 'Arial, sans-serif');
+            footer.setAttribute('font-size', '12');
+            footer.setAttribute('font-style', 'italic');
+            footer.setAttribute('fill', 'black');
+            footer.textContent = 'Atividade lúdica desenvolvida exclusivamente para fins didáticos.';
+            svg.appendChild(footer);
+            
+            // Ajustar viewBox para incluir todo o conteúdo
+            svg.setAttribute('viewBox', `0 0 600 ${startY + gridHeight + 80}`);
         }
         
         // Gerar o caça-palavras
@@ -747,6 +921,9 @@
             
             // Gerar os caminhos de solução
             generateSolutionPaths();
+            
+            // Gerar o SVG para impressão do gabarito
+            generatePrintSVG();
         }
         
         // Variáveis para seleção de palavras
