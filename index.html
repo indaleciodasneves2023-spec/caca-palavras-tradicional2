@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caça-Palavras Tradicional</title>
+    <title>Caça-Palavras Tradicional Interativo</title>
     <style>
         * {
             box-sizing: border-box;
@@ -90,28 +90,36 @@
         }
         .grid {
             display: grid;
-            gap: 2px;
+            gap: 1px;
             margin: 0 auto;
             justify-content: center;
             position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
         .cell {
-            width: 28px;  /* Alterado de 35px */
-    height: 28px; /* Alterado de 35px */
-    text-align: center;
-    line-height: 28px; /* Alterado de 35px */
-    border: 1px solid #8f94fb;
-    background-color: #fff;
-    font-weight: bold;
-    font-size: 14px; /* Alterado de 18px */
-    border-radius: 2px; /* Alterado de 3px */
-    transition: all 0.2s;
-    position: relative;
-    z-index: 2;
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            line-height: 28px;
+            border: 1px solid #8f94fb;
+            background-color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 2px;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 2;
+            cursor: pointer;
         }
-        .cell:hover {
-            background-color: #f0f0f0;
-            transform: scale(1.05);
+        .cell.selected {
+            background-color: #a8d8ff !important;
+            color: #000;
+        }
+        .cell.found {
+            background-color: #c8f7c5 !important;
+            color: #000;
         }
         .controls {
             display: flex;
@@ -190,24 +198,24 @@
             z-index: 3;
         }
         
-        /* Estilos do banco de palavras na tela e impressão - MODIFICADO */
+        /* Estilos do banco de palavras na tela e impressão */
         .simple-word-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 5px; /* Reduzido para economizar espaço */
+            gap: 5px;
             padding: 10px;
             list-style-type: none;
         }
         .simple-word-item {
-            padding: 6px 8px; /* Reduzido para economizar espaço */
+            padding: 6px 8px;
             background-color: #e8f4fc;
             border-radius: 5px;
-            text-align: left; /* Alinhado à esquerda */
+            text-align: left;
             font-weight: normal;
             font-size: 0.9rem;
             color: #3a1c71;
             transition: all 0.3s;
-            line-height: 1.3; /* Reduzido para economizar espaço */
+            line-height: 1.3;
         }
         .simple-word-item.found {
             background-color: #d4f7e6;
@@ -253,10 +261,10 @@
                 gap: 15px;
             }
             .cell {
-                width: 30px;
-                height: 30px;
-                line-height: 30px;
-                font-size: 16px;
+                width: 24px;
+                height: 24px;
+                line-height: 24px;
+                font-size: 12px;
             }
             .controls {
                 flex-direction: column;
@@ -280,10 +288,10 @@
                 font-size: 1.5rem;
             }
             .cell {
-                width: 28px;
-                height: 28px;
-                line-height: 28px;
-                font-size: 14px;
+                width: 22px;
+                height: 22px;
+                line-height: 22px;
+                font-size: 12px;
             }
             .simple-word-list {
                 grid-template-columns: repeat(2, 1fr);
@@ -307,7 +315,7 @@
             }
         }
         
-        /* Estilos de impressão - MODIFICADO */
+        /* Estilos de impressão */
         @media print {
             body {
                 background: white !important;
@@ -350,7 +358,8 @@
             .status,
             #solutions,
             footer,
-            .highlight-toggle {
+            .highlight-toggle,
+            .teacher-note {
                 display: none !important;
             }
             .game-container {
@@ -366,15 +375,15 @@
             }
             .simple-word-list {
                 grid-template-columns: repeat(4, 1fr) !important;
-                gap: 2px; /* Reduzido para economizar espaço */
+                gap: 2px;
             }
             .simple-word-item {
-                font-size: 0.8rem; /* Reduzido para economizar espaço */
+                font-size: 0.8rem;
                 color: #3a1c71 !important;
                 background-color: transparent !important;
-                text-align: left; /* Alinhado à esquerda */
-                padding: 2px 4px; /* Reduzido para economizar espaço */
-                line-height: 1.2; /* Reduzido para economizar espaço */
+                text-align: left;
+                padding: 2px 4px;
+                line-height: 1.2;
                 border: 1px solid #ddd;
             }
             
@@ -402,8 +411,8 @@
                 display: none !important;
             }
             
-            /* Rodapé para impressão */
-            body::after {
+            /* Rodapé único para impressão */
+            .container::after {
                 content: "Atividade lúdica desenvolvida exclusivamente para fins didáticos.";
                 display: block;
                 text-align: center;
@@ -411,6 +420,7 @@
                 font-size: 10pt;
                 color: black;
                 font-style: italic;
+                width: 100%;
             }
         }
         
@@ -443,6 +453,15 @@
             font-style: italic;
             color: #3a1c71;
         }
+        
+        /* Indicador de seleção */
+        .selection-indicator {
+            position: absolute;
+            background-color: rgba(168, 216, 255, 0.5);
+            pointer-events: none;
+            z-index: 1;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -461,8 +480,8 @@
                 <input type="text" id="puzzleName" placeholder="Ex: Palavras Importantes">
             </div>
             <div class="config-group">
-                <label for="rows">Número de Linhas (10-21):</label>
-                <input type="number" id="rows" min="10" max="21" value="21">
+                <label for="rows">Número de Linhas (15-25):</label>
+                <input type="number" id="rows" min="15" max="25" value="25">
             </div>
             <div class="config-group">
                 <label for="cols">Número de Colunas (10-17):</label>
@@ -489,6 +508,7 @@
             <div class="grid-container">
                 <h2>Caça-Palavras</h2>
                 <div id="grid" class="grid"></div>
+                <div id="selectionIndicator" class="selection-indicator"></div>
             </div>
             
             <div class="words-container">
@@ -546,7 +566,7 @@
     <script>
         // Constantes
         const MAX_WORDS = 30;
-        const MAX_WORD_LENGTH = 12; // Alterado de 8 para 12
+        const MAX_WORD_LENGTH = 12;
         
         // Variáveis globais
         let rows = 21;
@@ -555,6 +575,12 @@
         let placements = {};
         let colorIndex = 0;
         let foundWords = [];
+        
+        // Variáveis para seleção interativa
+        let isSelecting = false;
+        let startCell = null;
+        let selectedCells = [];
+        let selectionIndicator = null;
         
         // Cores para o estilo PDF (diferentes tons de marca-texto)
         const highlightColors = [
@@ -568,6 +594,9 @@
             document.getElementById('wordList').addEventListener('input', updateWordCount);
             document.getElementById('rows').addEventListener('change', validateGridSize);
             document.getElementById('cols').addEventListener('change', validateGridSize);
+            
+            // Inicializar o indicador de seleção
+            selectionIndicator = document.getElementById('selectionIndicator');
         });
         
         // Atualizar contador de palavras
@@ -745,10 +774,11 @@
             document.getElementById('wordsToFind').innerHTML = '';
             
             foundWords = [];
+            selectedCells = [];
             
             // Ajustar o layout do grid
-            document.getElementById('grid').style.gridTemplateColumns = `repeat(${cols}, 35px)`;
-            document.getElementById('solutionGrid').style.gridTemplateColumns = `repeat(${cols}, 35px)`;
+            document.getElementById('grid').style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+            document.getElementById('solutionGrid').style.gridTemplateColumns = `repeat(${cols}, 28px)`;
             
             // Criar grid vazio
             let grid = Array(rows).fill().map(() => Array(cols).fill(''));
@@ -874,14 +904,19 @@
                     cell.dataset.row = i;
                     cell.dataset.col = j;
                     
-                    // Adicionar eventos para seleção de palavras
-                    cell.addEventListener('mousedown', handleMouseDown);
-                    cell.addEventListener('mouseenter', handleMouseEnter);
-                    cell.addEventListener('mouseup', handleMouseUp);
+                    // Adicionar eventos para seleção interativa
+                    cell.addEventListener('mousedown', startSelection);
+                    cell.addEventListener('touchstart', startSelectionTouch);
                     
                     gridElement.appendChild(cell);
                 }
             }
+            
+            // Adicionar eventos de mouse/touch ao documento para seleção contínua
+            document.addEventListener('mousemove', continueSelection);
+            document.addEventListener('mouseup', endSelection);
+            document.addEventListener('touchmove', continueSelectionTouch, { passive: false });
+            document.addEventListener('touchend', endSelection);
             
             // Renderizar o grid de solução
             const solutionGridElement = document.getElementById('solutionGrid');
@@ -926,38 +961,108 @@
             generatePrintSVG();
         }
         
-        // Variáveis para seleção de palavras
-        let isMouseDown = false;
-        let selectedCells = [];
-        let startCell = null;
-        
-        // Manipular evento de mouse down
-        function handleMouseDown(e) {
-            isMouseDown = true;
-            selectedCells = [];
-            startCell = e.target;
-            toggleCellSelection(startCell);
-        }
-        
-        // Manipular evento de mouse enter
-        function handleMouseEnter(e) {
-            if (isMouseDown && e.target.classList.contains('cell')) {
-                toggleCellSelection(e.target);
+        // Funções para seleção interativa
+        function startSelection(e) {
+            e.preventDefault();
+            isSelecting = true;
+            const cell = e.target;
+            if (cell.classList.contains('cell')) {
+                startCell = cell;
+                clearSelection();
+                toggleCellSelection(cell);
+                updateSelectionIndicator();
             }
         }
         
-        // Manipular evento de mouse up
-        function handleMouseUp() {
-            isMouseDown = false;
-            checkSelectedWord();
+        function startSelectionTouch(e) {
+            e.preventDefault();
+            isSelecting = true;
+            const touch = e.touches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (cell && cell.classList.contains('cell')) {
+                startCell = cell;
+                clearSelection();
+                toggleCellSelection(cell);
+                updateSelectionIndicator();
+            }
         }
         
-        // Alternar seleção de célula
+        function continueSelection(e) {
+            if (!isSelecting) return;
+            
+            const cell = e.target;
+            if (cell.classList.contains('cell')) {
+                if (!selectedCells.includes(cell)) {
+                    toggleCellSelection(cell);
+                }
+                updateSelectionIndicator();
+            }
+        }
+        
+        function continueSelectionTouch(e) {
+            if (!isSelecting) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (cell && cell.classList.contains('cell') && !selectedCells.includes(cell)) {
+                toggleCellSelection(cell);
+                updateSelectionIndicator();
+            }
+        }
+        
+        function endSelection() {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            checkSelectedWord();
+            selectionIndicator.style.display = 'none';
+        }
+        
         function toggleCellSelection(cell) {
-            if (!cell.classList.contains('selected')) {
-                cell.classList.add('selected');
+            cell.classList.add('selected');
+            if (!selectedCells.includes(cell)) {
                 selectedCells.push(cell);
             }
+        }
+        
+        function clearSelection() {
+            selectedCells.forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            selectedCells = [];
+            startCell = null;
+        }
+        
+        function updateSelectionIndicator() {
+            if (selectedCells.length === 0) {
+                selectionIndicator.style.display = 'none';
+                return;
+            }
+            
+            // Calcular a área de seleção
+            let minRow = rows, maxRow = 0;
+            let minCol = cols, maxCol = 0;
+            
+            selectedCells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                
+                minRow = Math.min(minRow, row);
+                maxRow = Math.max(maxRow, row);
+                minCol = Math.min(minCol, col);
+                maxCol = Math.max(maxCol, col);
+            });
+            
+            // Posicionar e dimensionar o indicador
+            const cellSize = 28;
+            const gap = 1;
+            
+            selectionIndicator.style.display = 'block';
+            selectionIndicator.style.left = `${minCol * (cellSize + gap)}px`;
+            selectionIndicator.style.top = `${minRow * (cellSize + gap)}px`;
+            selectionIndicator.style.width = `${(maxCol - minCol + 1) * (cellSize + gap) - gap}px`;
+            selectionIndicator.style.height = `${(maxRow - minRow + 1) * (cellSize + gap) - gap}px`;
         }
         
         // Verificar se as células selecionadas formam uma palavra
@@ -1003,16 +1108,8 @@
             // Destacar as células no grid
             for (const cell of selectedCells) {
                 cell.classList.add('found');
-            }
-        }
-        
-        // Limpar seleção
-        function clearSelection() {
-            for (const cell of selectedCells) {
                 cell.classList.remove('selected');
             }
-            selectedCells = [];
-            startCell = null;
         }
         
         // Gerar os caminhos de solução (efeito de marca-texto)
@@ -1020,8 +1117,8 @@
             const solutionPaths = document.getElementById('solutionPaths');
             solutionPaths.innerHTML = '';
             
-            const cellSize = 35;
-            const gap = 2;
+            const cellSize = 28;
+            const gap = 1;
             
             for (const word of Object.keys(placements)) {
                 const positions = placements[word];
@@ -1133,4 +1230,3 @@
     </script>
 </body>
 </html>
-
