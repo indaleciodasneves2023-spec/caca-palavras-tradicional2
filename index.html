@@ -96,14 +96,14 @@
             position: relative;
         }
         .cell {
-            width: 28px;
-            height: 28px;
+            width: 35px;
+            height: 35px;
             text-align: center;
-            line-height: 28px;
+            line-height: 35px;
             border: 1px solid #8f94fb;
             background-color: #fff;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 18px;
             border-radius: 3px;
             transition: all 0.2s;
             position: relative;
@@ -747,8 +747,8 @@
             foundWords = [];
             
             // Ajustar o layout do grid
-            document.getElementById('grid').style.gridTemplateColumns = `repeat(${cols}, 28px)`;
-            document.getElementById('solutionGrid').style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+            document.getElementById('grid').style.gridTemplateColumns = `repeat(${cols}, 35px)`;
+            document.getElementById('solutionGrid').style.gridTemplateColumns = `repeat(${cols}, 35px)`;
             
             // Criar grid vazio
             let grid = Array(rows).fill().map(() => Array(cols).fill(''));
@@ -1133,5 +1133,3 @@
     </script>
 </body>
 </html>
-
-
